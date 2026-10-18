@@ -61,5 +61,5 @@ const NESROOMProfiles=(()=>{
  }
  function isFavorite(id){return !!active?.favorites?.includes(id)}
  function toggleFavorite(id){if(!active)return;active.favorites=active.favorites||[];active.favorites=isFavorite(id)?active.favorites.filter(x=>x!==id):[...active.favorites,id];persist()}
- return {init,isFavorite,toggleFavorite};
+ return {init,isFavorite,toggleFavorite,getClient:()=>client,getActive:()=>active};
 })();
