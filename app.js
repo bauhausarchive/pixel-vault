@@ -410,6 +410,12 @@ $('search').oninput = render;
 
 async function launch(g) {
   try {
+    const profile = NESROOMProfiles.getActive();
+
+    if (!profile) {
+      throw new Error('Selecione um jogador antes de iniciar.');
+    }
+
     if (activeUrl) {
       URL.revokeObjectURL(activeUrl);
     }
@@ -428,9 +434,24 @@ async function launch(g) {
 
     $('game').replaceChildren();
 
+    // Identificador exclusivo por perfil e jogo.
+    const gameId = `${g.cloud ? 'cloud' : 'local'}:${g.id}`;
+
+    // Conecta os botoes de Save State do NESROOM.
+    if (window.NESROOMSaves) {
+      NESROOMSaves.attach({
+        gameId,
+        profileId: profile.id
+      });
+    }
+
     window.EJS_player = '#game';
     window.EJS_core = CORE[g.console];
     window.EJS_gameUrl = activeUrl;
+
+    // Evita compartilhar configuracoes internas
+    // entre jogos e perfis diferentes.
+    window.EJS_gameID = `nesroom:${profile.id}:${gameId}`;
 
     window.EJS_pathtodata =
       'https://cdn.emulatorjs.org/stable/data/';
