@@ -1,7 +1,7 @@
 'use strict';
 const SYSTEMS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy',gbc:'Game Boy Color',gba:'Game Boy Advance'};
 const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gbc',gba:'gba'};
-const CORE={nes:'nes',snes:'snes',gb:'gb',gbc:'gbc',gba:'gba'};
+const CORE={nes:'nes',snes:'snes',gb:'gb',gbc:'gambatte',gba:'gba'};
 const $=id=>document.getElementById(id);
 let db,filter='all',items=[],activeUrl=null,localItems=[];
 function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
