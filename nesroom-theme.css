@@ -1,0 +1,19 @@
+/* NESROOM | Tema console + biblioteca horizontal
+   Camada visual: nao altera autenticação, ROMs, favoritos ou emulador. */
+:root{--bg:#101113;--panel:#202125;--muted:#a5a5a9;--line:#38393e;--accent:#e13d39;--text:#f5f3ef;color-scheme:dark}
+body{background:#101113;color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.shell{display:block;min-height:100vh;background:radial-gradient(ellipse at 75% 20%,#292a2e 0,#17181b 48%,#101113 92%)}
+.sidebar{padding:25px max(24px,4vw) 16px;background:transparent;border-right:0;border-bottom:1px solid #393a3e;display:flex;flex-direction:column;gap:22px}
+.brand{font-size:29px;letter-spacing:-1.7px;color:#fff}.brandicon{display:grid;place-items:center;background:#d83a36;color:white;border-radius:9px;width:44px;height:44px;font-size:27px}.brand small{font-size:9px;letter-spacing:3px;color:#b6b6b9}.brand span:not(.brandicon){color:var(--accent)}
+.sidebar nav{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.navlabel,.sidefoot{display:none}.sidebar .nav{width:auto;margin:0;padding:10px 15px;border:1px solid #3b3c41;border-radius:7px;background:#222328;color:#bbbcc0;font-size:12px;gap:7px}.sidebar .nav.active,.sidebar .nav:hover{background:var(--accent);color:white;border-color:var(--accent)}
+main{padding:29px max(24px,4vw) 40px;min-width:0;overflow:hidden}main>header{position:relative}.eyebrow{color:#e2504d}.headrow h1{font-size:clamp(35px,5vw,60px);letter-spacing:-2px}.headrow p{color:#a5a5a9}.primary{background:var(--accent);color:white;border-radius:7px}.primary:hover{background:#f4514d}.secondary{background:#26272c;border-color:#4b4c52;border-radius:7px}.toolbar{margin:27px 0 28px}.toolbar input{background:#222328;border:1px solid #45464b;border-radius:8px;color:white}.toolbar input:focus{border-color:var(--accent)}
+.selection-title{margin:12px 0 20px;color:#f5f3ef;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+/* Todos os jogos em uma unica linha, com rolagem horizontal nativa. */
+.library{display:flex!important;flex-wrap:nowrap!important;gap:18px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;padding:8px 4px 25px;scrollbar-width:thin;scrollbar-color:#6b6c70 #242529}
+.library::-webkit-scrollbar{height:8px}.library::-webkit-scrollbar-thumb{background:#6b6c70;border-radius:10px}.library::-webkit-scrollbar-track{background:#242529}
+.gamecard{flex:0 0 clamp(165px,18vw,238px);width:clamp(165px,18vw,238px);scroll-snap-align:start;min-width:0;transition:transform .17s ease}.gamecard:hover,.gamecard:focus-within{transform:translateY(-5px)}
+.cover{height:auto;aspect-ratio:3/4;border:2px solid #45464c;border-radius:9px;box-shadow:0 10px 20px #0005;background:#27282e}.gamecard.selected .cover,.gamecard:hover .cover,.gamecard:focus-within .cover{border-color:var(--accent);box-shadow:0 0 0 2px #e13d3940,0 12px 26px #0009}
+.cover .play{background:var(--accent);color:white;border-radius:5px;bottom:10px;left:10px;font-size:11px}.cover .fav{background:#141518e8}.cover .fav.on{color:#ff7474}.cardbottom h3{color:#f5f3ef}.cardbottom p{color:#a5a5a9}
+.controller-help{display:none!important}main>footer{margin-top:42px;color:#77787d;font-size:11px}
+.profile-logo span{color:var(--accent)}
+@media(max-width:720px){.sidebar{padding:18px 16px 14px;gap:16px}.brand{font-size:24px}.brandicon{width:38px;height:38px;font-size:24px}.sidebar nav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.sidebar .nav{flex:0 0 auto;padding:9px 11px;white-space:nowrap;font-size:11px}.sidebar .nav span{display:inline}main{padding:20px 16px 35px}.toolbar{margin:22px 0}.gamecard{flex-basis:165px;width:165px}.library{gap:12px}.headrow h1{font-size:38px}.cover .play{font-size:10px}}
