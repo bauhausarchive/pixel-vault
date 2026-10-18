@@ -15,7 +15,9 @@ $('rom').addEventListener('change',()=>{const f=$('rom').files[0];if(!f)return;c
 $('saveGame').onclick=async()=>{
  const button=$('saveGame'),f=$('rom').files[0],cover=$('coverFile').files[0];
  if(!f){$('formError').textContent='Escolha uma ROM.';return}
- const ext=f.name.split('.').pop().toLowerCase();if(!EXT[ext]||EXT[ext]!==$('platform').value){$('formError').textContent='Formato ou console incompatível.';return}
+ const ext=f.name.split('.').pop().toLowerCase();if(!EXT[ext] || (EXT[ext] !== $('platform').value && !(ext === 'gbc' && $('platform').value === 'gbc'))){
+  $('formError').textContent = `Formato incompatível: .${ext} / ${$('platform').value}`;
+  return;
  if(f.size>50*1024*1024){$('formError').textContent='Limite de 50 MB por ROM nesta versão.';return}
  if(cover&&(cover.size>3*1024*1024||!['image/png','image/jpeg','image/webp'].includes(cover.type))){$('formError').textContent='Capa deve ser PNG/JPG/WebP com até 3 MB.';return}
  button.disabled=true;$('formError').textContent='Enviando para a nuvem...';
