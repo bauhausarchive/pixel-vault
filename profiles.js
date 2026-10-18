@@ -22,15 +22,42 @@ const NESROOMProfiles=(()=>{
    if(!existing){const {error:insertError}=await client.from('profiles').insert({id:uid,name:p.name,avatar:p.avatar||'👾'});if(insertError)throw insertError}
    return uid;
  }
+ async function updateAdminVisibility(){
+   const btn=$('adminAccountBtn');btn.hidden=true;
+   if(!active||!client)return;
+   try{
+     const {data:{user},error:userError}=await client.auth.getUser();
+     if(userError||!user||user.is_anonymous===false)return;
+     const {data:isAdmin,error}=await client.rpc('is_nesroom_admin');
+     if(!error&&isAdmin===true)btn.hidden=false;
+   }catch(e){console.warn('Admin status unavailable',e)}
+ }
+ async function linkAdmin(e){
+   e.preventDefault();const status=$('adminAccountStatus'),submit=$('adminAccountSubmit');
+   status.textContent='Verificando conta...';submit.disabled=true;
+   try{
+     const {data:{user},error:userError}=await client.auth.getUser();
+     if(userError||!user)throw Error('Sessão expirada. Reabra seu perfil antes de continuar.');
+     const {data:isAdmin,error:adminError}=await client.rpc('is_nesroom_admin');
+     if(adminError||isAdmin!==true)throw Error('Este jogador não tem permissão de administrador.');
+     const email=$('adminEmail').value.trim(),password=$('adminPassword').value;
+     if(password.length<8)throw Error('A senha precisa ter pelo menos 8 caracteres.');
+     const {data,error}=await client.auth.updateUser({email,password},{emailRedirectTo:'https://bauhausarchive.github.io/pixel-vault/'});
+     if(error)throw error;
+     status.textContent='Solicitação enviada. Confira seu e-mail e confirme o endereço. Não limpe os dados do navegador. A conta só estará recuperável após verificarmos o login.';
+     $('adminPassword').value='';
+   }catch(err){status.textContent='Não foi possível vincular: '+err.message;console.error(err)}
+   finally{submit.disabled=false}
+ }
  async function choose(id){if(busy)return;const p=profiles.find(x=>x.id===id);if(!p)return;busy=true;draw();errorMessage('Conectando perfil à nuvem...');
-  try{await cloudSession(p);active=p;localStorage.setItem(ACTIVE,id);$('profileGate').hidden=true;$('playerLabel').textContent=`PRESS START · ${p.avatar||'👾'} ${p.name.toUpperCase()}`;errorMessage('');onChange()}
+  try{await cloudSession(p);active=p;localStorage.setItem(ACTIVE,id);$('profileGate').hidden=true;$('playerLabel').textContent=`PRESS START · ${p.avatar||'👾'} ${p.name.toUpperCase()}`;errorMessage('');onChange();await updateAdminVisibility()}
   catch(e){console.error(e);errorMessage('Erro na nuvem: '+e.message+' Verifique sua conexão e a configuração do Supabase.')}finally{busy=false;draw()}
  }
  async function init(cb){onChange=cb;load();if(!window.supabase||!window.NESROOM_CLOUD_CONFIG){errorMessage('Biblioteca Supabase não carregou. Confira a internet.');return}
   client=window.supabase.createClient(window.NESROOM_CLOUD_CONFIG.url,window.NESROOM_CLOUD_CONFIG.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   $('avatarOptions').replaceChildren();for(const a of AVATARS){const b=document.createElement('button');b.type='button';b.textContent=a;b.className='avatar-choice'+(a===selected?' picked':'');b.onclick=()=>{selected=a;document.querySelectorAll('.avatar-choice').forEach(x=>x.classList.toggle('picked',x===b))};$('avatarOptions').append(b)}
   $('profileForm').onsubmit=async e=>{e.preventDefault();if(busy)return;const name=$('profileName').value.trim().slice(0,30);if(!name)return;const p={id:crypto.randomUUID(),name,avatar:selected,favorites:[]};profiles.push(p);persist();$('profileName').value='';draw();await choose(p.id)};
-  $('switchPlayer').onclick=()=>{active=null;draw();$('profileGate').hidden=false};draw();const saved=localStorage.getItem(ACTIVE);if(saved&&profiles.some(p=>p.id===saved))await choose(saved);else $('profileGate').hidden=false;
+  $('switchPlayer').onclick=()=>{active=null;$('adminAccountBtn').hidden=true;draw();$('profileGate').hidden=false};$('adminAccountBtn').onclick=()=>$('adminAccountDialog').showModal();$('adminAccountClose').onclick=()=>$('adminAccountDialog').close();$('adminAccountForm').onsubmit=linkAdmin;draw();const saved=localStorage.getItem(ACTIVE);if(saved&&profiles.some(p=>p.id===saved))await choose(saved);else $('profileGate').hidden=false;
  }
  function isFavorite(id){return !!active?.favorites?.includes(id)}
  function toggleFavorite(id){if(!active)return;active.favorites=active.favorites||[];active.favorites=isFavorite(id)?active.favorites.filter(x=>x!==id):[...active.favorites,id];persist()}
