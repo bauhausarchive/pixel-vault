@@ -1,6 +1,6 @@
 'use strict';
 const SYSTEMS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy',gbc:'Game Boy Color',gba:'Game Boy Advance'};
-const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gbc',gba:'gba'};
+const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gambatte',gba:'gba'};
 const CORE={nes:'nes',snes:'snes',gb:'gb',gbc:'gambatte',gba:'gba'};
 const $=id=>document.getElementById(id);
 let db,filter='all',items=[],activeUrl=null,localItems=[];
@@ -41,8 +41,20 @@ function render(){
  for(const g of shown){
   const card=el('article','gamecard'),cover=el('div','cover');cover.dataset.console=g.console;cover.tabIndex=0;cover.setAttribute('role','button');cover.setAttribute('aria-label',`Jogar ${g.name}`);
   const art=el('div','boxart');
+  const fallback=()=>art.append(el('div','boxart-system',SYSTEMS[g.console]),el('div','boxart-name',g.name),el('div','boxart-symbol','★'),el('div','boxart-bottom','NESROOM · 8-BIT COLLECTION'));
   if(g.cover){const u=URL.createObjectURL(g.cover);coverUrls.push(u);const img=el('img','cover-image');img.src=u;img.alt=`Capa de ${g.name}`;art.append(img)}
-  else art.append(el('div','boxart-system',SYSTEMS[g.console]),el('div','boxart-name',g.name),el('div','boxart-symbol','★'),el('div','boxart-bottom','NESROOM · 8-BIT COLLECTION'));
+  else if(g.cloud&&g.coverPath){
+   fallback();
+   NESROOMCloud.getBlob(g.coverPath).then(blob=>{
+    if(!art.isConnected)return;
+    const u=URL.createObjectURL(blob);coverUrls.push(u);
+    const img=el('img','cover-image');img.alt=`Capa de ${g.name}`;
+    img.onload=()=>{if(art.isConnected)art.replaceChildren(img)};
+    img.onerror=()=>{URL.revokeObjectURL(u);console.warn('Imagem de capa inválida:',g.name)};
+    img.src=u;
+   }).catch(err=>console.warn('Não foi possível carregar a capa de',g.name,err));
+  }
+  else fallback();
   cover.append(art,el('span','play','▶ START'));
   const select=()=>{$('selectedTitle').textContent=g.name;document.querySelectorAll('.gamecard').forEach(c=>c.classList.remove('selected'));card.classList.add('selected')};
   cover.onclick=()=>launch(g);cover.onfocus=select;cover.onmouseenter=select;cover.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();launch(g)}};
