@@ -18,7 +18,7 @@ async function refresh(){items=await allGames();render()}
 let coverUrls=[];
 function render(){
  coverUrls.forEach(u=>URL.revokeObjectURL(u));coverUrls=[];
- const shown=items.filter(g=>(filter==='all'||(filter==='favorites'?g.favorite:g.console===filter))&&g.name.toLowerCase().includes($('search').value.toLowerCase())).sort((a,b)=>b.created-a.created);
+ const shown=items.filter(g=>(filter==='all'||(filter==='favorites'?NESROOMProfiles.isFavorite(g.id):g.console===filter))&&g.name.toLowerCase().includes($('search').value.toLowerCase())).sort((a,b)=>b.created-a.created);
  $('counter').textContent=`${shown.length} ${shown.length===1?'jogo':'jogos'}`;$('library').replaceChildren();$('empty').hidden=shown.length>0;
  $('selectedTitle').textContent=shown.length?shown[0].name:'SELECIONE UM JOGO';
  if(!shown.length){$('empty').querySelector('h2').textContent=items.length?'Nenhum jogo encontrado.':'Sua próxima aventura começa aqui.';$('empty').querySelector('p').textContent=items.length?'Tente outra busca ou escolha outro console.':'Adicione uma ROM sua para começar a jogar. Formatos: .nes, .sfc, .smc, .gb, .gbc e .gba.'}
@@ -30,7 +30,7 @@ function render(){
   cover.append(art,el('span','play','▶ START'));
   const select=()=>{$('selectedTitle').textContent=g.name;document.querySelectorAll('.gamecard').forEach(c=>c.classList.remove('selected'));card.classList.add('selected')};
   cover.onclick=()=>launch(g);cover.onfocus=select;cover.onmouseenter=select;cover.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();launch(g)}};
-  const fav=el('button','fav'+(g.favorite?' on':''),g.favorite?'♥':'♡');fav.title='Alternar favorito';fav.onclick=async()=>{g.favorite=!g.favorite;await putGame(g);render()};
+  const fav=el('button','fav'+(NESROOMProfiles.isFavorite(g.id)?' on':''),NESROOMProfiles.isFavorite(g.id)?'♥':'♡');fav.title='Alternar favorito';fav.onclick=()=>{NESROOMProfiles.toggleFavorite(g.id);render()};
   const bottom=el('div','cardbottom'),details=el('div');details.append(el('h3','',g.name),el('p','',SYSTEMS[g.console]));
   const del=el('button','delete','×');del.title='Remover jogo';del.onclick=async()=>{if(confirm(`Remover “${g.name}” da biblioteca deste navegador?`)){await removeGame(g.id);await refresh()}};
   bottom.append(details,del);card.append(cover,fav,bottom);$('library').append(card);
@@ -42,4 +42,4 @@ async function launch(g){try{if(activeUrl)URL.revokeObjectURL(activeUrl);activeU
 $('exitPlayer').onclick=()=>{ // Reload releases EmulatorJS resources and avoids conflicting global instances.
  location.reload()
 };
-(async()=>{try{db=await openDb();await refresh()}catch(e){console.error(e);$('empty').querySelector('h2').textContent='Armazenamento indisponível';$('empty').querySelector('p').textContent='Habilite o armazenamento local do navegador para usar a biblioteca.';$('addBtn').disabled=true;$('emptyAdd').disabled=true}})();
+(async()=>{try{NESROOMProfiles.init(()=>render());db=await openDb();await refresh()}catch(e){console.error(e);$('empty').querySelector('h2').textContent='Armazenamento indisponível';$('empty').querySelector('p').textContent='Habilite o armazenamento local do navegador para usar a biblioteca.';$('addBtn').disabled=true;$('emptyAdd').disabled=true}})();
