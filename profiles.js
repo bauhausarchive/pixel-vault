@@ -8,7 +8,35 @@ const NESROOMProfiles=(()=>{
  function persist(){localStorage.setItem(KEY,JSON.stringify(profiles))}
  function load(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');profiles=Array.isArray(a)?a.filter(p=>p&&typeof p.id==='string'&&typeof p.name==='string'):[]}catch{profiles=[]}}
  function errorMessage(message){let e=$('cloudStatus');if(!e){e=document.createElement('p');e.id='cloudStatus';e.style.cssText='color:#ff9d9d;font-size:12px;line-height:1.5';$('profileForm').after(e)}e.textContent=message||''}
- function draw(){const list=$('profileList');list.replaceChildren();for(const p of profiles){const b=document.createElement('button');b.type='button';b.className='profile-card';b.textContent=`${p.avatar||'👾'}  ${p.name}${localStorage.getItem(SESSION_KEY+p.id)?' ☁':''}`;b.disabled=busy;b.onclick=()=>choose(p.id);list.append(b)}}
+ function draw(){const list=$('profileList');list.replaceChildren();for(const p of profiles){
+   const wrap=document.createElement('div');wrap.className='profile-entry';
+   const b=document.createElement('button');b.type='button';b.className='profile-card';b.textContent=`${p.avatar||'👾'}  ${p.name}${localStorage.getItem(SESSION_KEY+p.id)?' ☁':''}`;b.disabled=busy;b.onclick=()=>choose(p.id);
+   const del=document.createElement('button');del.type='button';del.className='profile-remove';del.textContent='EXCLUIR PERFIL';del.setAttribute('aria-label',`Excluir perfil de ${p.name}`);del.disabled=busy;del.onclick=()=>deleteProfile(p.id);
+   wrap.append(b,del);list.append(wrap);
+  }}
+ async function deleteProfile(id){
+   if(busy)return;const p=profiles.find(x=>x.id===id);if(!p)return;
+   const saved=localStorage.getItem(SESSION_KEY+p.id);
+   if(!saved){errorMessage('Este perfil não tem sessão salva neste navegador. Para excluir a conta da nuvem, primeiro recupere o acesso a ela.');return}
+   if(!confirm(`Excluir permanentemente o perfil “${p.name}” e sua conta no NESROOM? Esta ação não pode ser desfeita. Os saves locais do emulador não serão apagados.`))return;
+   busy=true;draw();errorMessage('Excluindo perfil...');
+   try{
+     const session=JSON.parse(saved);
+     const {data,error}=await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});
+     if(error||!data?.user)throw Error('Sessão inválida. Não foi possível autenticar este perfil.');
+     const {data:isAdmin,error:adminError}=await client.rpc('is_nesroom_admin');
+     if(adminError)throw adminError;
+     if(isAdmin===true)throw Error('Por segurança, o perfil administrador não pode ser excluído aqui.');
+     const {error:deleteError}=await client.rpc('delete_my_nesroom_account');
+     if(deleteError)throw deleteError;
+     await client.auth.signOut().catch(()=>{});
+     profiles=profiles.filter(x=>x.id!==id);persist();localStorage.removeItem(SESSION_KEY+id);
+     if(active?.id===id||localStorage.getItem(ACTIVE)===id){active=null;localStorage.removeItem(ACTIVE);$('adminAccountBtn').hidden=true;$('profileGate').hidden=false}
+     errorMessage('Perfil excluído permanentemente da nuvem. Os saves locais do emulador não foram apagados.');onChange();
+   }catch(e){console.error(e);errorMessage('Não foi possível excluir: '+e.message+' O perfil foi preservado.');}
+   finally{busy=false;draw()}
+ }
+
  async function cloudSession(p){
    const saved=JSON.parse(localStorage.getItem(SESSION_KEY+p.id)||'null');
    let data,err;
